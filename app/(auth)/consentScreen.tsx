@@ -104,7 +104,7 @@ export default function ConsentScreen() {
 
   function ConsentCard({ c }: any) {
     if (!c) return null;
-    const isActive = c.status === "ACTIVE";
+    // const isActive = c.status === "ACTIVE";
     return (
       <View className="bg-white rounded-2xl px-5 py-6 shadow-sm">
         <View className="mt-2 space-y-2">
