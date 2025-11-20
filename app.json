@@ -14,7 +14,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nuofunds",
+       "associatedDomains": [
+        "applinks:madalynn-unhastened-vernacularly.ngrok-free.dev"
+      ]
     },
     "android": {
       "statusBar": {
@@ -26,7 +30,22 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "pan",
+      "package": "com.nuofunds",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [
+            {
+              "scheme": "https",
+              "host": "madalynn-unhastened-vernacularly.ngrok-free.dev"
+            }
+          ]
+        }
+      ],
+      "autoVerify": true
     },
     "web": {
       "bundler": "metro",
@@ -40,7 +59,8 @@
         {
           "experimentalLauncherActivity": true
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

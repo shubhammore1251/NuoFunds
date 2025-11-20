@@ -1,8 +1,12 @@
 // app/(noauth)/register.tsx
 import AuthInput from "@/components/AuthInput";
+import PasswordInput from "@/components/PasswordInput";
 import PlaceholderLogo from "@/components/PlaceholderLogo";
-import { Text, View } from "@/components/Themed";
-import { useAuthStore } from "@/store/useAuthStore";
+import { PageView, Text, View } from "@/components/Themed";
+import Regex from "@/constants/Regex";
+import { urls } from "@/constants/urls";
+import request from "@/services/api/request";
+import { useAuthStore, User } from "@/store/useAuthStore";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Pressable } from "react-native";
@@ -11,33 +15,79 @@ import Toast from "react-native-toast-message";
 export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const { login } = useAuthStore();
   const router = useRouter();
 
-  const submit = () => {
-    if (!email.trim()) {
-      Toast.show({ type: "error", text1: "Email required" });
+  const submit = async () => {
+    if (!email.trim() || !name.trim() || !password.trim() || !phone.trim()) {
+      Toast.show({ type: "error", text1: "Please fill all fields" });
       return;
     }
+      
+    if (!Regex.email.test(email)) {
+      Toast.show({ type: "error", text1: "Invalid email" });
+      return;
+    }
+
+    if (phone.trim().length !== 10) {
+      Toast.show({ type: "error", text1: "Invalid phone" });
+      return;
+    }
+
+    if (!Regex.password.test(password)) {
+      Toast.show({ type: "error", text1: "Password must be at least 8 characters long and contain at least one uppercase, lowercase, number, and special character" });
+      return;
+    }
+
+    if (password.trim() !== confirmPassword.trim()) {
+      Toast.show({ type: "error", text1: "Passwords do not match" });
+      return;
+    }
+
     setLoading(true);
-    const user = {
-        id: Date.now().toString(),
-        name: name || "New User",
-        email,
-      };
-      login(user);
+
+    try {
+      const { data, HttpStatusCode, status } = await request(
+        "POST",
+        urls.noauth.register,
+        {},
+        {
+          email,
+          password,
+          name,
+          phone,
+        }
+      );
+
+      if (data.success && status === HttpStatusCode.CREATED) {
+        login(data.data as User);
+        Toast.show({
+          type: "success",
+          text1: "User registered",
+        });
+        setTimeout(() => {
+          router.replace("/(auth)/consentScreen");
+        }, 1000);
+      }
+    } catch (error) {
       Toast.show({
-        type: "success",
-        text1: "Registered",
-        text2: `Welcome ${user.name}`,
+        type: "error",
+        text1: "Something went wrong",
       });
+    } finally {
       setLoading(false);
-      router.replace("/(auth)/consentScreen");
+    }
   };
 
   return (
-    <View className="flex-1 px-6 pt-12">
+    <PageView className="flex-1 px-6 pt-12">
       <View className="items-center mb-8">
         <PlaceholderLogo />
         <Text className="text-xl font-semibold mt-4">Create account</Text>
@@ -57,6 +107,32 @@ export default function RegisterScreen() {
           onChangeText={setEmail}
           placeholder="email"
           keyboardType="email-address"
+        />
+
+        <AuthInput
+          label="Phone"
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="10-digit phone"
+          keyboardType="phone-pad"
+        />
+
+        <PasswordInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Create password"
+          show={showPass}
+          onToggle={() => setShowPass((s) => !s)}
+        />
+
+        <PasswordInput
+          label="Confirm password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Confirm password"
+          show={showConfirm}
+          onToggle={() => setShowConfirm((s) => !s)}
         />
 
         <Pressable
@@ -85,6 +161,6 @@ export default function RegisterScreen() {
       <View className="items-center pb-6">
         <Text className="text-xs text-gray-400">We respect your privacy</Text>
       </View>
-    </View>
+    </PageView>
   );
 }
